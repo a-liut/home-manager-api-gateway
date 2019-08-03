@@ -21,7 +21,10 @@ router.post("/", function(req, res, next) {
             res.send(devices[0]._id);
         } else {
             // Create a new device
-            const device = new Device(req.body);
+            const device = new Device({
+                address: ip
+            });
+
             device.save()
                 .then(device => {
                     res.send(device._id);
