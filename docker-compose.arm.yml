@@ -7,7 +7,7 @@ services:
     depends_on:
     - mongo
   mongo:
-    image: mongo
-    command: bash -c "mongod --repair && mongod"
+    image: andresvidal/rpi3-mongodb3
     ports:
     - "27017:27017"
+    command: bash -c "mongod --repair && mongod"
