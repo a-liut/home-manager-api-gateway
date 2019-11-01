@@ -14,14 +14,9 @@ mongoose.connect('mongodb://mongo:27017', {
 mongoose.connection.on('error', console.error.bind(console, 'Connection error:'));
 
 
-var indexRoute = require('./routes/index');
 var deviceRoute = require('./routes/device');
 
 var app = express();
-
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'pug');
 
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
@@ -31,7 +26,6 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', indexRoute);
 app.use('/devices', deviceRoute);
 
 
