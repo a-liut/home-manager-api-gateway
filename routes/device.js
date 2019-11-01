@@ -34,10 +34,15 @@ router.post("/", function(req, res, next) {
                 let name = req.body.name || null;
 
                 // Create a new device
-                const device = new Device({
-                    address: ip,
-                    name: name
-                });
+                let data = {
+                    address: ip
+                };
+
+                if (name != null) {
+                    data.name = name
+                }
+
+                const device = new Device(data);
 
                 device
                     .save()
@@ -101,7 +106,9 @@ router.post("/:deviceId/data/:dataName", function(req, res, next) {
         device
             .save()
             .then(device => {
-                res.status(200).send("OK");
+                res.status(200).send({
+                    message: "Data inserted successfully"
+                });
             })
             .catch(err => {
                 return next(createError(400, err));
