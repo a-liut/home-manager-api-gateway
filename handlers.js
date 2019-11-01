@@ -1,3 +1,6 @@
+/**
+ * development error handler: will print stacktrace
+ */
 function devErrorHandler(err, req, res, next) {
     res.status(err.status || 500);
     res.send({
@@ -6,6 +9,9 @@ function devErrorHandler(err, req, res, next) {
     });
 }
 
+/**
+ * production error handler: no stacktraces leaked to user
+ */
 function prodErrorHandler(err, req, res, next) {
     res.status(err.status || 500);
     res.send({

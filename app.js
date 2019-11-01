@@ -32,14 +32,10 @@ app.use('/devices', deviceRoute);
 // --- error handlers
 let handlers = require('./handlers.js');
 
-// development error handler
-// will print stacktrace
 if (app.get('env') === 'development') {
     app.use(handlers.devErrorHandler);
 }
 
-// production error handler
-// no stacktraces leaked to user
 app.use(handlers.prodErrorHandler);
 
 module.exports = app;
