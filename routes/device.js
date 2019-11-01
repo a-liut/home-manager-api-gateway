@@ -1,7 +1,8 @@
 let express = require("express");
 let router = express.Router();
 let Device = require("../models/Device");
-let mongoose = require('mongoose');
+let mongoose = require("mongoose");
+var createError = require("http-errors");
 
 /**
  * GET all registred devices.
@@ -23,8 +24,7 @@ router.post("/", function(req, res, next) {
         },
         (err, devices) => {
             if (err) {
-                res.status(500).send("ERROR: " + err);
-                return;
+                return next(createError(500, err));
             }
 
             if (devices.length > 0) {
@@ -45,7 +45,7 @@ router.post("/", function(req, res, next) {
                         res.send(device._id);
                     })
                     .catch(err => {
-                        res.status(400).send("ERROR: " + err);
+                        return next(createError(400, err));
                     });
             }
         }
@@ -57,21 +57,18 @@ router.post("/", function(req, res, next) {
  */
 router.get("/:deviceId", function(req, res, next) {
     if (!mongoose.Types.ObjectId.isValid(req.params.deviceId)) {
-        res.status(400).send("Invalid device id");
-        return;
+        return next(createError(400, "Invalid device id"));
     }
 
     Device.findById(req.params.deviceId, (err, device) => {
         res.header("Content-Type", "application/json");
 
         if (err != null) {
-            res.status(500).send("ERROR: " + err);
-            return;
+            return next(createError(500, err));
         }
 
         if (device == null) {
-            res.status(404).send("Device not found");
-            return;
+            return next(createError(404, "Device not found"));
         }
 
         res.status(200).send(JSON.stringify(device));
@@ -88,13 +85,11 @@ router.post("/:deviceId/data/:dataName", function(req, res, next) {
     }
     Device.findById(req.params.deviceId, (err, device) => {
         if (err != null) {
-            res.status(500).send("ERROR: " + err);
-            return;
+            return next(createError(500, err));
         }
 
         if (device == null) {
-            res.status(404).send("Device not found");
-            return;
+            return next(createError(404, "Device not found"));
         }
 
         device.data.push({
@@ -109,7 +104,7 @@ router.post("/:deviceId/data/:dataName", function(req, res, next) {
                 res.status(200).send("OK");
             })
             .catch(err => {
-                res.status(400).send("ERROR: " + err);
+                return next(createError(400, err));
             });
     });
 });
