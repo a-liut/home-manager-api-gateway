@@ -17,6 +17,11 @@ var DataSchema = mongoose.Schema({
 });
 
 var DeviceSchema = mongoose.Schema({
+    name: {
+        type: String,
+        unique: true,
+        default: "New Device"
+    },
     address: {
         type: String,
         required: [true, "IP address is missing"],

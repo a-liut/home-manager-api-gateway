@@ -8,7 +8,9 @@ var mongoose = require('mongoose');
 mongoose.plugin(schema => { schema.options.usePushEach = true });
 
 mongoose.Promise = require('bluebird');
-mongoose.connect('mongodb://mongo:27017');
+mongoose.connect('mongodb://mongo:27017', {
+    useNewUrlParser: true
+});
 mongoose.connection.on('error', console.error.bind(console, 'Connection error:'));
 
 
