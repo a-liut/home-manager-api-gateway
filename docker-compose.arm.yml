@@ -11,3 +11,7 @@ services:
     ports:
     - "27017:27017"
     command: bash -c "mongod --repair && mongod"
+  rabbitmq:
+    image: rabbitmq
+    ports:
+    - "5672:5672"

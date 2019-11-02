@@ -1,6 +1,6 @@
 # home-manager
 
-This is a VERY simple data collector service for IoT devices. It provides a REST interface to register new IoT devices by their IP.
+*home-manager is a very* simple microservice that manages IoT devices. It provides a REST interface to register new IoT devices by their IP.
 Registered IoT devices can then upload their own readings and data to the service using the provided ID.
 
 ## Running

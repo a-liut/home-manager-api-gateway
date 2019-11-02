@@ -2,100 +2,97 @@ let express = require("express");
 let router = express.Router();
 let Device = require("../models/Device");
 let mongoose = require("mongoose");
-var createError = require("http-errors");
+let createError = require("http-errors");
 
 /**
  * GET all registred devices.
  */
-router.get("/", function(req, res, next) {
-    Device.find({}, (err, devices) => {
-        res.header("Content-Type", "application/json");
+router.get("/", async function(req, res, next) {
+    res.header("Content-Type", "application/json");
+
+    try {
+        let devices = await Device.find();
+
         res.send(JSON.stringify(devices.map(d => d._id), null, 4));
-    });
+    } catch (err) {
+        return next(err);
+    }
 });
 
 /**
  * POST a new device to register.
  */
-router.post("/", function(req, res, next) {
+router.post("/", async function(req, res, next) {
     let ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
-    Device.find({
+
+    try {
+        let devices = await Device.find({
             address: ip
-        },
-        (err, devices) => {
-            if (err) {
-                return next(createError(500, err));
+        });
+
+        if (devices.length > 0) {
+            // Take the first (and only) element
+            res.send(devices[0]._id);
+        } else {
+            let name = req.body.name || null;
+
+            // Create a new device
+            let data = {
+                address: ip
+            };
+
+            if (name != null) {
+                data.name = name
             }
 
-            if (devices.length > 0) {
-                // Take the first (and only) element
-                res.send(devices[0]._id);
-            } else {
-                let name = req.body.name || null;
+            const device = new Device(data);
 
-                // Create a new device
-                let data = {
-                    address: ip
-                };
+            try {
+                const d = await device.save();
 
-                if (name != null) {
-                    data.name = name
-                }
-
-                const device = new Device(data);
-
-                device
-                    .save()
-                    .then(device => {
-                        res.send(device._id);
-                    })
-                    .catch(err => {
-                        return next(createError(400, err));
-                    });
+                res.send(device._id);
+            } catch (err) {
+                return next(createError(400, err));
             }
         }
-    );
+    } catch (err) {
+        return next(createError(500, err));
+    }
 });
 
 /**
  * GET a device by its id.
  */
-router.get("/:deviceId", function(req, res, next) {
+router.get("/:deviceId", async function(req, res, next) {
+    res.header("Content-Type", "application/json");
+
     if (!mongoose.Types.ObjectId.isValid(req.params.deviceId)) {
         return next(createError(400, "Invalid device id"));
     }
 
-    Device.findById(req.params.deviceId, (err, device) => {
-        res.header("Content-Type", "application/json");
-
-        if (err != null) {
-            return next(createError(500, err));
-        }
-
-        if (device == null) {
-            return next(createError(404, "Device not found"));
-        }
+    try {
+        let device = await Device.findById(req.params.deviceId);
+        if (device == null) return next(createError(404, "Device not found"));
 
         res.status(200).send(JSON.stringify(device));
-    });
+    } catch (err) {
+        return next(createError(500, err));
+    }
 });
 
 /**
  * POST a new data to upload for a given device.
  */
-router.post("/:deviceId/data/:dataName", function(req, res, next) {
-    if (!mongoose.Types.ObjectId.isValid(req.params.deviceId)) {
-        res.status(400).send("Invalid device id");
-        return;
-    }
-    Device.findById(req.params.deviceId, (err, device) => {
-        if (err != null) {
-            return next(createError(500, err));
-        }
+router.post("/:deviceId/data/:dataName", async function(req, res, next) {
+    res.header("Content-Type", "application/json");
 
-        if (device == null) {
-            return next(createError(404, "Device not found"));
-        }
+    if (!mongoose.Types.ObjectId.isValid(req.params.deviceId)) {
+        return next(createError(400, "Invalid device id"));
+    }
+
+    try {
+        let device = await Device.findById(req.params.deviceId);
+        if (device == null) return next(createError(404, "Device not found"));
 
         device.data.push({
             name: req.params.dataName,
@@ -103,17 +100,18 @@ router.post("/:deviceId/data/:dataName", function(req, res, next) {
             unit: req.body.unit
         });
 
-        device
-            .save()
-            .then(device => {
-                res.status(200).send({
-                    message: "Data inserted successfully"
-                });
-            })
-            .catch(err => {
-                return next(createError(400, err));
+        try {
+            await device.save();
+
+            res.status(200).json({
+                message: "Data inserted successfully"
             });
-    });
+        } catch (err) {
+            return next(createError(400, err));
+        }
+    } catch (err) {
+        return next(createError(500, err));
+    }
 });
 
 module.exports = router;
