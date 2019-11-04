@@ -1,6 +1,5 @@
 var express = require('express');
 var path = require('path');
-var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
@@ -8,18 +7,23 @@ var mongoose = require('mongoose');
 mongoose.plugin(schema => { schema.options.usePushEach = true });
 
 mongoose.Promise = require('bluebird');
-mongoose.connect('mongodb://mongo:27017/homemanager', {
-    useNewUrlParser: true
-});
-mongoose.connection.on('error', console.error.bind(console, 'Connection error:'));
 
+function connectMongo() {
+    let host = process.env.MONGO_HOST;
+    let port = process.env.MONGO_PORT;
+
+    mongoose.connect(`mongodb://${host}:${port}/homemanager`, {
+        useNewUrlParser: true
+    });
+    mongoose.connection.on('error', console.error.bind(console, 'Connection error:'));
+}
+
+connectMongo();
 
 var deviceRoute = require('./routes/device');
 
 var app = express();
 
-// uncomment after placing your favicon in /public
-//app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));

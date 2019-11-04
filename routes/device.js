@@ -81,6 +81,38 @@ router.get("/:deviceId", async function(req, res, next) {
 });
 
 /**
+ * PUT Updates a device by its id.
+ */
+router.put("/:deviceId", async function(req, res, next) {
+    res.header("Content-Type", "application/json");
+
+    if (!mongoose.Types.ObjectId.isValid(req.params.deviceId)) {
+        return next(createError(400, "Invalid device id"));
+    }
+
+    try {
+        let device = await Device.findById(req.params.deviceId);
+        if (device == null) return next(createError(404, "Device not found"));
+
+        let name = req.body.name || null;
+
+        if (name != null) {
+            device.name = name;
+        }
+
+        try {
+            const d = await device.save();
+
+            res.send(device);
+        } catch (err) {
+            return next(createError(400, err));
+        }
+    } catch (err) {
+        return next(createError(500, err));
+    }
+});
+
+/**
  * POST a new data to upload for a given device.
  */
 router.post("/:deviceId/data/:dataName", async function(req, res, next) {
