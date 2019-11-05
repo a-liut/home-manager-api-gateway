@@ -174,7 +174,7 @@ router.get("/:deviceId/data/:dataName", async function(req, res, next) {
 
         // Filter data
         if (limit > 0) {
-            ret = ret.slice(ret.length - limit, ret.length);
+            ret = ret.slice(0, limit);
         }
 
         res.status(200).send(JSON.stringify(ret));
@@ -197,7 +197,7 @@ router.post("/:deviceId/data/:dataName", async function(req, res, next) {
         let device = await Device.findById(req.params.deviceId);
         if (device == null) return next(createError(404, "Device not found"));
 
-        device.data.push({
+        device.data.splice(0, 0, {
             name: req.params.dataName,
             value: req.body.value,
             unit: req.body.unit
