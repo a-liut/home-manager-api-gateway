@@ -4,6 +4,28 @@ let Device = require("../src/models/device");
 let mongoose = require("mongoose");
 let createError = require("http-errors");
 
+function processDevice(device) {
+    // Find data names
+    let datanames = device.data
+        .map(d => d.name)
+        .reduce((accumulator, dataName) => {
+            if (!accumulator.includes(dataName)) {
+                accumulator.push(dataName);
+            }
+            return accumulator
+        }, []);
+
+    return {
+        id: device._id,
+        name: device.name,
+        online: device.online,
+        address: device.address,
+        data: datanames,
+        created_at: device.created_at,
+        updated_at: device.updated_at
+    }
+}
+
 /**
  * GET all registred devices.
  */
@@ -13,7 +35,9 @@ router.get("/", async function(req, res, next) {
     try {
         let devices = await Device.find();
 
-        res.send(JSON.stringify(devices.map(d => d._id), null, 4));
+        let ret = devices.map(processDevice);
+
+        res.send(JSON.stringify(ret, null, 4));
     } catch (err) {
         return next(err);
     }
@@ -74,25 +98,8 @@ router.get("/:deviceId", async function(req, res, next) {
         let device = await Device.findById(req.params.deviceId);
         if (device == null) return next(createError(404, "Device not found"));
 
-        // Find data names
-        let datanames = device.data
-            .map(d => d.name)
-            .reduce((accumulator, dataName) => {
-                if (!accumulator.includes(dataName)) {
-                    accumulator.push(dataName);
-                }
-                return accumulator
-            }, []);
-
         // clean output
-        let ret = {
-            name: device.name,
-            online: device.online,
-            address: device.address,
-            data: datanames,
-            created_at: device.created_at,
-            updated_at: device.updated_at
-        }
+        let ret = processDevice(device)
 
         res.status(200).send(JSON.stringify(ret));
     } catch (err) {
