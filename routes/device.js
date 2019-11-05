@@ -1,6 +1,6 @@
 let express = require("express");
 let router = express.Router();
-let Device = require("../models/Device");
+let Device = require("../src/models/device");
 let mongoose = require("mongoose");
 let createError = require("http-errors");
 

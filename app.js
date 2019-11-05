@@ -3,22 +3,9 @@ var path = require('path');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
-var mongoose = require('mongoose');
-mongoose.plugin(schema => { schema.options.usePushEach = true });
+var db = require('./src/db/db');
 
-mongoose.Promise = require('bluebird');
-
-function connectMongo() {
-    let host = process.env.MONGO_HOST;
-    let port = process.env.MONGO_PORT;
-
-    mongoose.connect(`mongodb://${host}:${port}/homemanager`, {
-        useNewUrlParser: true
-    });
-    mongoose.connection.on('error', console.error.bind(console, 'Connection error:'));
-}
-
-connectMongo();
+db.init();
 
 var deviceRoute = require('./routes/device');
 
