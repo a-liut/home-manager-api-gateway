@@ -74,7 +74,16 @@ router.get("/:deviceId", async function(req, res, next) {
         let device = await Device.findById(req.params.deviceId);
         if (device == null) return next(createError(404, "Device not found"));
 
-        res.status(200).send(JSON.stringify(device));
+        // clean output
+        let ret = {
+            name: device.name,
+            online: device.online,
+            address: device.address,
+            created_at: device.created_at,
+            updated_at: device.updated_at
+        }
+
+        res.status(200).send(JSON.stringify(ret));
     } catch (err) {
         return next(createError(500, err));
     }
@@ -107,6 +116,68 @@ router.put("/:deviceId", async function(req, res, next) {
         } catch (err) {
             return next(createError(400, err));
         }
+    } catch (err) {
+        return next(createError(500, err));
+    }
+});
+
+/**
+ * GET Get all device data.
+ * A limit value can be specified to limit the number of objects returned.
+ */
+router.get("/:deviceId/data", async function(req, res, next) {
+    res.header("Content-Type", "application/json");
+
+    let limit = req.query.limit || 0;
+
+    if (!mongoose.Types.ObjectId.isValid(req.params.deviceId)) {
+        return next(createError(400, "Invalid device id"));
+    }
+
+    try {
+        let device = await Device.findById(req.params.deviceId);
+        if (device == null) return next(createError(404, "Device not found"));
+
+        let ret = device.data || [];
+
+        // Filter data
+        if (limit > 0) {
+            ret = ret.slice(ret.length - limit, ret.length);
+        }
+
+        res.status(200).send(JSON.stringify(ret));
+    } catch (err) {
+        return next(createError(500, err));
+    }
+});
+
+
+/**
+ * GET Get device data with a specific name.
+ * A limit value can be specified to limit the number of objects returned.
+ */
+router.get("/:deviceId/data/:dataName", async function(req, res, next) {
+    res.header("Content-Type", "application/json");
+
+    let dataName = req.params.dataName || 0;
+    let limit = req.query.limit || 0;
+
+    if (!mongoose.Types.ObjectId.isValid(req.params.deviceId)) {
+        return next(createError(400, "Invalid device id"));
+    }
+
+    try {
+        let device = await Device.findById(req.params.deviceId);
+        if (device == null) return next(createError(404, "Device not found"));
+
+        let ret = device.data.filter(d => d.name == dataName) || [];
+
+        // Filter data
+        if (limit > 0) {
+            ret = ret.slice(ret.length - limit, ret.length);
+        }
+
+        res.status(200).send(JSON.stringify(ret));
     } catch (err) {
         return next(createError(500, err));
     }
