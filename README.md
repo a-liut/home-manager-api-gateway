@@ -45,6 +45,7 @@ Code: ```200```
         "name": "New Device",
         "online": false,
         "address": ":172.21.0.1",
+        "heartbeat_url": "http://172.21.0.1/heartbeat",
         "data": [],
         "created_at": "2019-11-11T11:36:44.962Z",
         "updated_at": "2019-11-11T11:36:44.962Z"
@@ -110,6 +111,7 @@ Example: ```/devices/5dc947ccdfb5d10013713a8f```
     "name": "New Device",
     "online": false,
     "address": "::ffff:172.21.0.1",
+    "heartbeat_url": "http://172.21.0.1/heartbeat",
     "data": [],
     "created_at": "2019-11-11T11:36:44.962Z",
     "updated_at": "2019-11-11T11:36:44.962Z"
@@ -134,7 +136,8 @@ Body constraints:
 
 ```json
 {
-    "name": "string" // Optional
+    "name": "string", // Optional
+    "heartbeat_url": "string" // Optional
 }
 ```
 
@@ -160,6 +163,7 @@ Example body:
     "name": "Custom name",
     "online": false,
     "address": "::ffff:172.21.0.1",
+    "heartbeat_url": "http://172.21.0.1/heartbeat",
     "data": [],
     "created_at": "2019-11-11T11:36:44.962Z",
     "updated_at": "2019-11-11T11:36:44.962Z"

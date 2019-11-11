@@ -20,6 +20,7 @@ function processDevice(device) {
         name: device.name,
         online: device.online,
         address: device.address,
+        heartbeat_url: device.heartbeat_url,
         data: datanames,
         created_at: device.created_at,
         updated_at: device.updated_at
@@ -59,6 +60,7 @@ router.post("/", async function(req, res, next) {
             res.send(devices[0]._id);
         } else {
             let name = req.body.name || null;
+            let heartbeat_url = req.body.heartbeat_url || null;
 
             // Create a new device
             let data = {
@@ -67,6 +69,10 @@ router.post("/", async function(req, res, next) {
 
             if (name != null) {
                 data.name = name
+            }
+
+            if (heartbeat_url != null) {
+                data.heartbeat_url = heartbeat_url;
             }
 
             const device = new Device(data);
@@ -122,9 +128,14 @@ router.put("/:deviceId", async function(req, res, next) {
         if (device == null) return next(createError(404, "Device not found"));
 
         let name = req.body.name || null;
+        let heartbeat_url = req.body.heartbeat_url || null;
 
         if (name != null) {
             device.name = name;
+        }
+
+        if (heartbeat_url != null) {
+            device.heartbeat_url = heartbeat_url;
         }
 
         try {

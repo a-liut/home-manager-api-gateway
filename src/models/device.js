@@ -28,6 +28,9 @@ var DeviceSchema = mongoose.Schema({
         index: true,
         unique: true
     },
+    heartbeat_url: {
+        type: String,
+    },
     data: {
         type: [DataSchema]
     },
