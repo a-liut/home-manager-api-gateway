@@ -129,6 +129,7 @@ router.put("/:deviceId", async function(req, res, next) {
 
         let name = req.body.name || null;
         let heartbeat_url = req.body.heartbeat_url || null;
+        let online = req.body.online || null;
 
         if (name != null) {
             device.name = name;
@@ -136,6 +137,10 @@ router.put("/:deviceId", async function(req, res, next) {
 
         if (heartbeat_url != null) {
             device.heartbeat_url = heartbeat_url;
+        }
+
+        if (online != null) {
+            device.online = !!online;
         }
 
         try {
