@@ -74,7 +74,7 @@ router.post("/", async function(req, res, next) {
             try {
                 const d = await device.save();
 
-                res.send(device._id);
+                res.send(d._id);
             } catch (err) {
                 return next(createError(400, err));
             }
