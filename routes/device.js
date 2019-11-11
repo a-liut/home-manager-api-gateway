@@ -130,7 +130,7 @@ router.put("/:deviceId", async function(req, res, next) {
         try {
             const d = await device.save();
 
-            res.send(device);
+            res.send(d);
         } catch (err) {
             return next(createError(400, err));
         }
