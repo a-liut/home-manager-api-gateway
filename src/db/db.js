@@ -7,7 +7,20 @@ function connectMongo() {
     mongoose.connect(`mongodb://${host}:${port}/homemanager`, {
         useNewUrlParser: true
     });
-    mongoose.connection.on('error', console.error.bind(console, 'Connection error:'));
+
+    mongoose.connection.on("connected", () => {
+        console.log("Connected to db!");
+    });
+
+    mongoose.connection.on("disconnected", () => {
+        console.log("Disconnected from db!");
+    });
+
+    mongoose.connection.on('error', err => {
+        console.error('Connection error:', err);
+
+        process.exit(1);
+    });
 }
 
 function init() {
