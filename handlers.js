@@ -2,6 +2,7 @@
  * development error handler: will print stacktrace
  */
 function devErrorHandler(err, req, res, next) {
+    console.log("Error: ", err);
     res.status(err.status || 500);
     res.send({
         message: err.message,
