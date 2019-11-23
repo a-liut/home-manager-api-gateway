@@ -19,8 +19,8 @@ var DataSchema = mongoose.Schema({
 var DeviceSchema = mongoose.Schema({
     name: {
         type: String,
-        unique: true,
-        default: "New Device"
+        required: [true, "Name is missing"],
+        unique: true
     },
     address: {
         type: String,
