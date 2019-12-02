@@ -1,31 +1,9 @@
 let express = require("express");
 let router = express.Router();
 let Device = require("../src/model/device");
+let DeviceData = require("../src/model/devicedata");
 let mongoose = require("mongoose");
 let createError = require("http-errors");
-
-function processDevice(device) {
-    // Find data names
-    let datanames = device.data
-        .map(d => d.name)
-        .reduce((accumulator, dataName) => {
-            if (!accumulator.includes(dataName)) {
-                accumulator.push(dataName);
-            }
-            return accumulator
-        }, []);
-
-    return {
-        id: device._id,
-        name: device.name,
-        online: device.online,
-        address: device.address,
-        heartbeat_url: device.heartbeat_url,
-        data: datanames,
-        created_at: device.created_at,
-        updated_at: device.updated_at
-    }
-}
 
 /**
  * GET all registred devices.
@@ -34,11 +12,9 @@ router.get("/", async function(req, res, next) {
     res.header("Content-Type", "application/json");
 
     try {
-        let devices = await Device.find();
+        let devices = await Device.find().populate({ path: "data", select: 'name device' })
 
-        let ret = devices.map(processDevice);
-
-        res.send(JSON.stringify(ret, null, 4));
+        res.json(devices);
     } catch (err) {
         return next(err);
     }
@@ -101,13 +77,10 @@ router.get("/:deviceId", async function(req, res, next) {
     }
 
     try {
-        let device = await Device.findById(req.params.deviceId);
+        let device = await Device.findById(req.params.deviceId).populate({ path: "data", select: 'name device' });
         if (device == null) return next(createError(404, "Device not found"));
 
-        // clean output
-        let ret = processDevice(device)
-
-        res.status(200).send(JSON.stringify(ret));
+        res.status(200).json(device);
     } catch (err) {
         return next(createError(500, err));
     }
@@ -124,7 +97,7 @@ router.put("/:deviceId", async function(req, res, next) {
     }
 
     try {
-        let device = await Device.findById(req.params.deviceId);
+        let device = await Device.findById(req.params.deviceId).populate({ path: "data", select: 'name device' });
         if (device == null) return next(createError(404, "Device not found"));
 
         let name = req.body.name || null;
@@ -162,7 +135,7 @@ router.put("/:deviceId", async function(req, res, next) {
 router.get("/:deviceId/data", async function(req, res, next) {
     res.header("Content-Type", "application/json");
 
-    let limit = req.query.limit || 0;
+    let limit = parseInt(req.query.limit, 10) || 0;
 
     if (!mongoose.Types.ObjectId.isValid(req.params.deviceId)) {
         return next(createError(400, "Invalid device id"));
@@ -172,14 +145,15 @@ router.get("/:deviceId/data", async function(req, res, next) {
         let device = await Device.findById(req.params.deviceId);
         if (device == null) return next(createError(404, "Device not found"));
 
-        let ret = device.data || [];
+        var query = DeviceData.find().byDeviceId(device.id);
 
-        // Filter data
         if (limit > 0) {
-            ret = ret.slice(ret.length - limit, ret.length);
+            query = query.limit(limit);
         }
 
-        res.status(200).send(JSON.stringify(ret));
+        let data = await query;
+
+        res.status(200).json(data);
     } catch (err) {
         return next(createError(500, err));
     }
@@ -193,8 +167,8 @@ router.get("/:deviceId/data", async function(req, res, next) {
 router.get("/:deviceId/data/:dataName", async function(req, res, next) {
     res.header("Content-Type", "application/json");
 
-    let dataName = req.params.dataName || 0;
-    let limit = req.query.limit || 0;
+    let dataName = req.params.dataName || "";
+    let limit = parseInt(req.query.limit, 10) || 0;
 
     if (!mongoose.Types.ObjectId.isValid(req.params.deviceId)) {
         return next(createError(400, "Invalid device id"));
@@ -204,14 +178,15 @@ router.get("/:deviceId/data/:dataName", async function(req, res, next) {
         let device = await Device.findById(req.params.deviceId);
         if (device == null) return next(createError(404, "Device not found"));
 
-        let ret = device.data.filter(d => d.name == dataName) || [];
+        var query = DeviceData.find({ name: dataName });
 
-        // Filter data
         if (limit > 0) {
-            ret = ret.slice(0, limit);
+            query = query.limit(limit);
         }
 
-        res.status(200).send(JSON.stringify(ret));
+        let data = await query;
+
+        res.status(200).json(data);
     } catch (err) {
         return next(createError(500, err));
     }
@@ -231,14 +206,15 @@ router.post("/:deviceId/data/:dataName", async function(req, res, next) {
         let device = await Device.findById(req.params.deviceId);
         if (device == null) return next(createError(404, "Device not found"));
 
-        device.data.splice(0, 0, {
+        var d = new DeviceData({
             name: req.params.dataName,
             value: req.body.value,
-            unit: req.body.unit
+            unit: req.body.unit,
+            device: device.id
         });
 
         try {
-            await device.save();
+            await d.save();
 
             res.status(200).json({
                 message: "Data inserted successfully"

@@ -1,22 +1,10 @@
 var mongoose = require('mongoose');
+var Schema = mongoose.Schema;
+var ObjectId = Schema.Types.ObjectId;
 
-var DataSchema = mongoose.Schema({
-    name: {
-        type: String,
-        required: [true, "Name is missing"]
-    },
-    value: {
-        type: String,
-        required: [true, "Value is missing"]
-    },
-    unit: {
-        type: String
-    }
-}, {
-    timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }
-});
+var DeviceDataSchema = require('./devicedata');
 
-var DeviceSchema = mongoose.Schema({
+var DeviceSchema = Schema({
     name: {
         type: String,
         required: [true, "Name is missing"],
@@ -31,15 +19,22 @@ var DeviceSchema = mongoose.Schema({
     heartbeat_url: {
         type: String,
     },
-    data: {
-        type: [DataSchema]
-    },
     online: {
         type: Boolean,
         default: false
     }
 }, {
-    timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }
+    timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },
+    toJSON: {
+        virtuals: true
+    }
+});
+
+DeviceSchema.virtual('data', {
+    ref: 'Device',
+    localField: '_id',
+    foreignField: 'device',
+    justOne: false
 });
 
 module.exports = mongoose.model("Device", DeviceSchema);
