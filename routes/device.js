@@ -1,13 +1,16 @@
 let express = require("express");
 let router = express.Router();
-let Device = require("../src/model/Device");
-let DeviceData = require("../src/model/DeviceData");
 let mongoose = require("mongoose");
 let createError = require("http-errors");
 
+let Device = require("../src/model/Device");
+let DeviceData = require("../src/model/DeviceData");
+
 const GetDevicesUseCase = require("../src/usecases/GetDevicesUseCase");
 const RegisterDeviceUseCase = require("../src/usecases/RegisterDeviceUseCase");
+
 const InvalidDataException = require("../src/exception/InvalidDataException");
+const DeviceNotFoundException = require("../src/exception/DeviceNotFoundException");
 
 /**
  * GET all registred devices.
@@ -60,17 +63,21 @@ router.post("/", async function(req, res, next) {
 router.get("/:deviceId", async function(req, res, next) {
     res.header("Content-Type", "application/json");
 
-    if (!mongoose.Types.ObjectId.isValid(req.params.deviceId)) {
-        return next(createError(400, "Invalid device id"));
-    }
+    let useCase = new GetDevicesUseCase(req.params.deviceId);
 
     try {
-        let device = await Device.findById(req.params.deviceId).populate({ path: "data", select: 'name device' });
-        if (device == null) return next(createError(404, "Device not found"));
+        let devices = await useCase.start();
 
-        res.status(200).json(device);
-    } catch (err) {
-        return next(createError(500, err));
+        res.status(200).json(devices[0]);
+    } catch (ex) {
+        switch (ex.constructor) {
+            case DeviceNotFoundException:
+                return next(createError(404, ex.message));
+            case InvalidDataException:
+                return next(createError(400, ex.message));
+            default:
+                return next(createError(500, ex.message));
+        }
     }
 });
 
