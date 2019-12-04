@@ -1,7 +1,7 @@
 const Device = require("../model/Device");
 const UseCase = require("./UseCase");
 const InvalidDataException = require("../exception/InvalidDataException");
-const CreateDeviceException = require("../exception/CreateDeviceException");
+const DeviceException = require("../exception/DeviceException");
 
 /**
  * Use case that implements the registration process of a new device.
@@ -77,7 +77,7 @@ async function registerDevice(data) {
 
         return d;
     } catch (ex) {
-        throw new CreateDeviceException("Cannot create a new Device", ex);
+        throw new DeviceException("Cannot create a new Device", ex);
     }
 }
 

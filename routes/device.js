@@ -8,6 +8,7 @@ let DeviceData = require("../src/model/DeviceData");
 
 const GetDevicesUseCase = require("../src/usecases/GetDevicesUseCase");
 const RegisterDeviceUseCase = require("../src/usecases/RegisterDeviceUseCase");
+const UpdateDeviceUseCase = require("../src/usecases/UpdateDeviceUseCase");
 
 const InvalidDataException = require("../src/exception/InvalidDataException");
 const DeviceNotFoundException = require("../src/exception/DeviceNotFoundException");
@@ -87,39 +88,27 @@ router.get("/:deviceId", async function(req, res, next) {
 router.put("/:deviceId", async function(req, res, next) {
     res.header("Content-Type", "application/json");
 
-    if (!mongoose.Types.ObjectId.isValid(req.params.deviceId)) {
-        return next(createError(400, "Invalid device id"));
+    let data = {
+        name: req.body.name,
+        heartbeat_url: req.body.heartbeat_url,
+        online: req.body.online
     }
 
+    let useCase = new UpdateDeviceUseCase(req.params.deviceId, data);
+
     try {
-        let device = await Device.findById(req.params.deviceId).populate({ path: "data", select: 'name device' });
-        if (device == null) return next(createError(404, "Device not found"));
+        let device = await useCase.start();
 
-        let name = req.body.name || null;
-        let heartbeat_url = req.body.heartbeat_url || null;
-        let online = req.body.online || null;
-
-        if (name != null) {
-            device.name = name;
+        res.status(200).json(device);
+    } catch (ex) {
+        switch (ex.constructor) {
+            case DeviceNotFoundException:
+                return next(createError(404, ex.message));
+            case InvalidDataException:
+                return next(createError(400, ex.message));
+            default:
+                return next(createError(500, ex.message));
         }
-
-        if (heartbeat_url != null) {
-            device.heartbeat_url = heartbeat_url;
-        }
-
-        if (online != null) {
-            device.online = !!online;
-        }
-
-        try {
-            const d = await device.save();
-
-            res.send(d);
-        } catch (err) {
-            return next(createError(400, err));
-        }
-    } catch (err) {
-        return next(createError(500, err));
     }
 });
 
