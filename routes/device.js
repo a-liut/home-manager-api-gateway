@@ -1,9 +1,12 @@
 let express = require("express");
 let router = express.Router();
-let Device = require("../src/model/device");
-let DeviceData = require("../src/model/devicedata");
+let Device = require("../src/model/Device");
+let DeviceData = require("../src/model/DeviceData");
 let mongoose = require("mongoose");
 let createError = require("http-errors");
+
+const RegisterDeviceUseCase = require("../src/usecases/RegisterDeviceUseCase");
+const InvalidDataException = require("../src/exception/InvalidDataException");
 
 /**
  * GET all registred devices.
@@ -26,43 +29,25 @@ router.get("/", async function(req, res, next) {
 router.post("/", async function(req, res, next) {
     let ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
 
+    let data = {
+        name: req.body.name || null,
+        heartbeat_url: req.body.heartbeat_url || null
+    };
+
+    let useCase = new RegisterDeviceUseCase(ip, data);
+
     try {
-        let devices = await Device.find({
-            address: ip
-        });
+        let device = await useCase.start();
 
-        if (devices.length > 0) {
-            // Take the first (and only) element
-            res.send(devices[0]._id);
-        } else {
-            let name = req.body.name || null;
-            let heartbeat_url = req.body.heartbeat_url || null;
-
-            // Create a new device
-            let data = {
-                address: ip
-            };
-
-            if (name != null) {
-                data.name = name
-            }
-
-            if (heartbeat_url != null) {
-                data.heartbeat_url = heartbeat_url;
-            }
-
-            const device = new Device(data);
-
-            try {
-                const d = await device.save();
-
-                res.send(d._id);
-            } catch (err) {
-                return next(createError(400, err));
-            }
+        res.status(200).json(device._id);
+    } catch (ex) {
+        console.log("Exception: ", ex);
+        switch (ex.constructor) {
+            case InvalidDataException:
+                return next(createError(400, ex.message));
+            default:
+                return next(createError(500, ex.message));
         }
-    } catch (err) {
-        return next(createError(500, err));
     }
 });
 
