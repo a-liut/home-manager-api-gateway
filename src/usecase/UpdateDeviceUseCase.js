@@ -72,7 +72,7 @@ async function updateDevice(device, data) {
     try {
         console.log("Updating " + device.id + "...");
 
-        device.save();
+        await device.save();
 
         console.log("Device successfully updated.");
 

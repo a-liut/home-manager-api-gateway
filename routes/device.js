@@ -6,9 +6,9 @@ let createError = require("http-errors");
 let Device = require("../src/model/Device");
 let DeviceData = require("../src/model/DeviceData");
 
-const GetDevicesUseCase = require("../src/usecases/GetDevicesUseCase");
-const RegisterDeviceUseCase = require("../src/usecases/RegisterDeviceUseCase");
-const UpdateDeviceUseCase = require("../src/usecases/UpdateDeviceUseCase");
+const GetDevicesUseCase = require("../src/usecase/GetDevicesUseCase");
+const RegisterDeviceUseCase = require("../src/usecase/RegisterDeviceUseCase");
+const UpdateDeviceUseCase = require("../src/usecase/UpdateDeviceUseCase");
 
 const InvalidDataException = require("../src/exception/InvalidDataException");
 const DeviceNotFoundException = require("../src/exception/DeviceNotFoundException");
