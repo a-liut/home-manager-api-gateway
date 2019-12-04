@@ -5,6 +5,7 @@ let DeviceData = require("../src/model/DeviceData");
 let mongoose = require("mongoose");
 let createError = require("http-errors");
 
+const GetDevicesUseCase = require("../src/usecases/GetDevicesUseCase");
 const RegisterDeviceUseCase = require("../src/usecases/RegisterDeviceUseCase");
 const InvalidDataException = require("../src/exception/InvalidDataException");
 
@@ -14,12 +15,14 @@ const InvalidDataException = require("../src/exception/InvalidDataException");
 router.get("/", async function(req, res, next) {
     res.header("Content-Type", "application/json");
 
+    let useCase = new GetDevicesUseCase();
+
     try {
-        let devices = await Device.find().populate({ path: "data", select: 'name device' })
+        let devices = await useCase.start();
 
         res.json(devices);
     } catch (err) {
-        return next(err);
+        return next(createError(500, ex.message));
     }
 });
 
