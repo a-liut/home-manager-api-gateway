@@ -9,6 +9,7 @@ let DeviceData = require("../src/model/DeviceData");
 const GetDevicesUseCase = require("../src/usecase/GetDevicesUseCase");
 const RegisterDeviceUseCase = require("../src/usecase/RegisterDeviceUseCase");
 const UpdateDeviceUseCase = require("../src/usecase/UpdateDeviceUseCase");
+const GetDeviceDataUseCase = require("../src/usecase/GetDeviceDataUseCase");
 
 const InvalidDataException = require("../src/exception/InvalidDataException");
 const DeviceNotFoundException = require("../src/exception/DeviceNotFoundException");
@@ -121,28 +122,28 @@ router.get("/:deviceId/data", async function(req, res, next) {
 
     let limit = parseInt(req.query.limit, 10) || 0;
 
-    if (!mongoose.Types.ObjectId.isValid(req.params.deviceId)) {
-        return next(createError(400, "Invalid device id"));
-    }
+    let findDeviceUseCase = new GetDevicesUseCase(req.params.deviceId);
 
     try {
-        let device = await Device.findById(req.params.deviceId);
-        if (device == null) return next(createError(404, "Device not found"));
+        let devices = await findDeviceUseCase.start();
+        let device = devices[0];
 
-        var query = DeviceData.find().byDeviceId(device.id);
+        let findDeviceDataUseCase = new GetDeviceDataUseCase(device, limit);
 
-        if (limit > 0) {
-            query = query.limit(limit);
-        }
-
-        let data = await query;
+        let data = await findDeviceDataUseCase.start();
 
         res.status(200).json(data);
-    } catch (err) {
-        return next(createError(500, err));
+    } catch (ex) {
+        switch (ex.constructor) {
+            case DeviceNotFoundException:
+                return next(createError(404, ex.message));
+            case InvalidDataException:
+                return next(createError(400, ex.message));
+            default:
+                return next(createError(500, ex.message));
+        }
     }
 });
-
 
 /**
  * GET Get device data with a specific name.
