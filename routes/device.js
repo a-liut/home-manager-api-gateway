@@ -8,7 +8,7 @@ const GetDeviceDataUseCase = require("../src/usecase/GetDeviceDataUseCase");
 const AddDeviceDataUseCase = require("../src/usecase/AddDeviceDataUseCase");
 
 /**
- * GET all registred devices.
+ * GET: Return all registred devices.
  */
 router.get("/", async function(req, res, next) {
     res.header("Content-Type", "application/json");
@@ -25,7 +25,8 @@ router.get("/", async function(req, res, next) {
 });
 
 /**
- * POST a new device to register.
+ * POST: Register a new device returning the new ID.
+ * If the device is already registered, then the same ID is returned.
  */
 router.post("/", async function(req, res, next) {
     let ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
@@ -47,7 +48,7 @@ router.post("/", async function(req, res, next) {
 });
 
 /**
- * GET a device by its id.
+ * GET: Returns a device by its id.
  */
 router.get("/:deviceId", async function(req, res, next) {
     res.header("Content-Type", "application/json");
@@ -64,7 +65,7 @@ router.get("/:deviceId", async function(req, res, next) {
 });
 
 /**
- * PUT Updates a device by its id.
+ * PUT: Update data of a device by its ID.
  */
 router.put("/:deviceId", async function(req, res, next) {
     res.header("Content-Type", "application/json");
@@ -87,7 +88,7 @@ router.put("/:deviceId", async function(req, res, next) {
 });
 
 /**
- * GET Get all device data.
+ * GET: Return all data of a specified device.
  * A limit value can be specified to limit the number of objects returned.
  */
 router.get("/:deviceId/data", async function(req, res, next) {
@@ -112,7 +113,7 @@ router.get("/:deviceId/data", async function(req, res, next) {
 });
 
 /**
- * GET Get device data with a specific name.
+ * GET: Return all data with a specific name of a speficied device.
  * A limit value can be specified to limit the number of objects returned.
  */
 router.get("/:deviceId/data/:dataName", async function(req, res, next) {
@@ -138,7 +139,7 @@ router.get("/:deviceId/data/:dataName", async function(req, res, next) {
 });
 
 /**
- * POST a new data to upload for a given device.
+ * POST: Add new data for a given device.
  */
 router.post("/:deviceId/data/:dataName", async function(req, res, next) {
     res.header("Content-Type", "application/json");
