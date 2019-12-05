@@ -5,7 +5,6 @@ const DeviceData = require("../model/DeviceData");
 const UseCase = require("./UseCase");
 
 const InvalidDataException = require("../exception/InvalidDataException");
-const DeviceNotFoundException = require("../exception/DeviceNotFoundException");
 
 /**
  * Use case that fetches devices from the data source.

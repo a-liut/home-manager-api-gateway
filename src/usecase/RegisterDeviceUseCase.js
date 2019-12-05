@@ -1,5 +1,6 @@
 const Device = require("../model/Device");
 const UseCase = require("./UseCase");
+
 const InvalidDataException = require("../exception/InvalidDataException");
 const DeviceException = require("../exception/DeviceException");
 
