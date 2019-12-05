@@ -11,11 +11,12 @@ const DeviceNotFoundException = require("../exception/DeviceNotFoundException");
  * Use case that fetches devices from the data source.
  * @param {Device} device Device to fetch data for
  */
-function GetDeviceDataUseCase(device, limit = 0) {
+function GetDeviceDataUseCase(device, dataName = null, limit = 0) {
     UseCase.call(this);
     this.name = "GetDeviceDataUseCase";
 
     this.device = device;
+    this.dataName = dataName;
     this.limit = limit;
 }
 
@@ -36,6 +37,10 @@ GetDeviceDataUseCase.prototype.run = async function run() {
 
     if (this.limit > 0) {
         query = query.limit(this.limit);
+    }
+
+    if (this.dataName != null) {
+        query.where({ name: this.dataName });
     }
 
     return await query;
