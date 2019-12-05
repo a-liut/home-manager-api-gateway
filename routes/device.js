@@ -10,6 +10,7 @@ const GetDevicesUseCase = require("../src/usecase/GetDevicesUseCase");
 const RegisterDeviceUseCase = require("../src/usecase/RegisterDeviceUseCase");
 const UpdateDeviceUseCase = require("../src/usecase/UpdateDeviceUseCase");
 const GetDeviceDataUseCase = require("../src/usecase/GetDeviceDataUseCase");
+const AddDeviceDataUseCase = require("../src/usecase/AddDeviceDataUseCase");
 
 const InvalidDataException = require("../src/exception/InvalidDataException");
 const DeviceNotFoundException = require("../src/exception/DeviceNotFoundException");
@@ -184,32 +185,31 @@ router.get("/:deviceId/data/:dataName", async function(req, res, next) {
 router.post("/:deviceId/data/:dataName", async function(req, res, next) {
     res.header("Content-Type", "application/json");
 
-    if (!mongoose.Types.ObjectId.isValid(req.params.deviceId)) {
-        return next(createError(400, "Invalid device id"));
-    }
+    let findDeviceUseCase = new GetDevicesUseCase(req.params.deviceId);
 
     try {
-        let device = await Device.findById(req.params.deviceId);
-        if (device == null) return next(createError(404, "Device not found"));
+        let devices = await findDeviceUseCase.start();
+        let device = devices[0];
 
-        var d = new DeviceData({
+        let data = {
             name: req.params.dataName,
             value: req.body.value,
-            unit: req.body.unit,
-            device: device.id
-        });
+            unit: req.body.unit
+        };
 
-        try {
-            await d.save();
+        let updateDeviceDataUseCase = new AddDeviceDataUseCase(device, data);
+        let deviceData = await updateDeviceDataUseCase.start();
 
-            res.status(200).json({
-                message: "Data inserted successfully"
-            });
-        } catch (err) {
-            return next(createError(400, err));
+        res.status(200).json(deviceData);
+    } catch (ex) {
+        switch (ex.constructor) {
+            case DeviceNotFoundException:
+                return next(createError(404, ex.message));
+            case InvalidDataException:
+                return next(createError(400, ex.message));
+            default:
+                return next(createError(500, ex.message));
         }
-    } catch (err) {
-        return next(createError(500, err));
     }
 });
 
