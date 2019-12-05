@@ -19,9 +19,10 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/devices', deviceRoute);
 
-
 // --- error handlers
 let handlers = require('./handlers.js');
+
+app.use(handlers.customErrorHandler);
 
 if (app.get('env') === 'development') {
     app.use(handlers.devErrorHandler);
