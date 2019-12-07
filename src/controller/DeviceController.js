@@ -19,6 +19,8 @@ async function getAllDevices(req, res, next) {
 };
 
 async function createDevice(req, res, next) {
+    res.header("Content-Type", "application/json");
+
     let ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
 
     let data = {
