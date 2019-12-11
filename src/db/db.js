@@ -4,7 +4,7 @@ function connectMongo() {
     let host = process.env.MONGO_HOST;
     let port = process.env.MONGO_PORT;
 
-    mongoose.connect(`mongodb://${host}:${port}/homemanager`, {
+    mongoose.connect(`mongodb://${host}:${port}/home-manager-devices`, {
         useNewUrlParser: true
     });
 
