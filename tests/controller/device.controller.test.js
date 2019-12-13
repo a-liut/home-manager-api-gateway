@@ -5,35 +5,32 @@ const expect = chai.expect;
 const TestUtils = require("../util/TestUtils");
 
 const DeviceController = require("../../src/controller/DeviceController");
-const GetDevicesUseCase = require("../../src/usecase/GetDevicesUseCase");
-const RegisterDeviceUseCase = require("../../src/usecase/RegisterDeviceUseCase");
-const UpdateDeviceUseCase = require("../../src/usecase/UpdateDeviceUseCase");
-const GetDeviceDataUseCase = require("../../src/usecase/GetDeviceDataUseCase");
-const AddDeviceDataUseCase = require("../../src/usecase/AddDeviceDataUseCase");
+
+const DeviceService = require("../../src/service/DeviceService");
 
 const InvalidDataException = require("../../src/exception/InvalidDataException");
 const DeviceException = require("../../src/exception/DeviceException");
 const DeviceDataException = require("../../src/exception/DeviceDataException");
+const DeviceNotFoundException = require("../../src/exception/DeviceNotFoundException");
 
-// chai.use(chaiHttp);
 chai.should();
 
 describe("DeviceController", () => {
     describe("getAllDevices", () => {
-        let useCaseStub;
+        let deviceServiceStub;
 
         beforeEach(() => {
-            useCaseStub = sinon.stub(GetDevicesUseCase.prototype, "start");
+            deviceServiceStub = sinon.stub(DeviceService, "find");
         });
 
         afterEach(() => {
-            useCaseStub.restore();
+            deviceServiceStub.restore();
         });
 
         it("should send all devices", async() => {
             let testDevices = [{ id: "test" }];
 
-            useCaseStub.returns(Promise.resolve(testDevices));
+            deviceServiceStub.returns(Promise.resolve(testDevices));
 
             let req = TestUtils.buildReq();
             let res = TestUtils.buildRes();
@@ -45,20 +42,82 @@ describe("DeviceController", () => {
         });
     });
 
-    describe("createDevice", () => {
-        let useCaseStub;
+    describe("getDeviceById", () => {
+        let deviceServiceStub;
 
         beforeEach(() => {
-            useCaseStub = sinon.stub(RegisterDeviceUseCase.prototype, "start");
+            deviceServiceStub = sinon.stub(DeviceService, "get");
         });
 
         afterEach(() => {
-            useCaseStub.restore();
+            deviceServiceStub.restore();
+        });
+
+        it("should fail on error", async() => {
+            let ex = new DeviceException();
+            deviceServiceStub.throws(ex);
+
+            let req = TestUtils.buildReq();
+            let res = TestUtils.buildRes();
+            let nextStub = sinon.spy();
+
+            await DeviceController.getDeviceById(req, res, nextStub);
+
+            expect(nextStub.calledOnceWith(ex)).to.be.true;
+        });
+
+        it("should fail on device not found", async() => {
+            deviceServiceStub.returns(null);
+
+            let req = TestUtils.buildReq();
+            let res = TestUtils.buildRes();
+            let nextStub = sinon.spy();
+
+            await DeviceController.getDeviceById(req, res, nextStub);
+
+            expect(nextStub.calledOnce).to.be.true;
+
+            let thrownException = nextStub.getCall(0).args[0];
+
+            // TODO: check the type of the object!
+            expect(thrownException.name).to.be.eq('DeviceNotFoundException');
+        });
+
+        it("should send a device on success", async() => {
+            let device = {
+                _id: "abcdefghilmnopqrstuvz",
+                name: "test"
+            };
+
+            deviceServiceStub.returns(Promise.resolve(device));
+
+            let req = TestUtils.buildReq();
+            let res = TestUtils.buildRes();
+            let next = () => {};
+
+            res.status.returns(res);
+
+            await DeviceController.getDeviceById(req, res, next);
+
+            expect(res.status.calledOnceWith(200)).to.be.true;
+            expect(res.json.calledOnceWith(device)).to.be.true;
+        });
+    });
+
+    describe("createDevice", () => {
+        let deviceServiceStub;
+
+        beforeEach(() => {
+            deviceServiceStub = sinon.stub(DeviceService, "add");
+        });
+
+        afterEach(() => {
+            deviceServiceStub.restore();
         });
 
         it("should fail on error", async() => {
             let ex = new InvalidDataException();
-            useCaseStub.throws(ex);
+            deviceServiceStub.throws(ex);
 
             let req = TestUtils.buildReq();
             let res = TestUtils.buildRes();
@@ -75,7 +134,7 @@ describe("DeviceController", () => {
                 name: "test"
             };
 
-            useCaseStub.returns(Promise.resolve(device));
+            deviceServiceStub.returns(Promise.resolve(device));
 
             let req = TestUtils.buildReq();
             let res = TestUtils.buildRes();
@@ -90,67 +149,59 @@ describe("DeviceController", () => {
         });
     });
 
-    describe("getDeviceById", () => {
-        let useCaseStub;
+    describe("updateDeviceById", () => {
+        let deviceServiceGetStub;
+        let deviceServiceUpdateStub;
 
         beforeEach(() => {
-            useCaseStub = sinon.stub(GetDevicesUseCase.prototype, "start");
+            deviceServiceGetStub = sinon.stub(DeviceService, "get");
+            deviceServiceUpdateStub = sinon.stub(DeviceService, "update");
         });
 
         afterEach(() => {
-            useCaseStub.restore();
+            deviceServiceGetStub.restore();
+            deviceServiceUpdateStub.restore();
         });
 
-        it("should fail on error", async() => {
+        it("should fail on error fetching the device", async() => {
             let ex = new DeviceException();
-            useCaseStub.throws(ex);
+            deviceServiceGetStub.throws(ex);
 
             let req = TestUtils.buildReq();
             let res = TestUtils.buildRes();
             let nextStub = sinon.spy();
 
-            await DeviceController.getDeviceById(req, res, nextStub);
+            await DeviceController.updateDeviceById(req, res, nextStub);
 
             expect(nextStub.calledOnceWith(ex)).to.be.true;
         });
 
-        it("should send a device on success", async() => {
+        it("should fail on device not found", async() => {
+            deviceServiceGetStub.returns(null);
+
+            let req = TestUtils.buildReq();
+            let res = TestUtils.buildRes();
+            let nextStub = sinon.spy();
+
+            await DeviceController.updateDeviceById(req, res, nextStub);
+
+            expect(nextStub.calledOnce).to.be.true;
+
+            let nextArgs = nextStub.getCall(0).args[0];
+
+            // TODO: check the type of the object.
+            expect(nextArgs.name).to.be.eq('DeviceNotFoundException');
+        });
+
+        it("should fail on error storing the device", async() => {
+            let ex = new DeviceException();
             let device = {
                 _id: "abcdefghilmnopqrstuvz",
                 name: "test"
             };
 
-            let devices = [device];
-
-            useCaseStub.returns(Promise.resolve(devices));
-
-            let req = TestUtils.buildReq();
-            let res = TestUtils.buildRes();
-            let next = () => {};
-
-            res.status.returns(res);
-
-            await DeviceController.getDeviceById(req, res, next);
-
-            expect(res.status.calledOnceWith(200)).to.be.true;
-            expect(res.json.calledOnceWith(device)).to.be.true;
-        });
-    });
-
-    describe("updateDeviceById", () => {
-        let useCaseStub;
-
-        beforeEach(() => {
-            useCaseStub = sinon.stub(UpdateDeviceUseCase.prototype, "start");
-        });
-
-        afterEach(() => {
-            useCaseStub.restore();
-        });
-
-        it("should fail on error", async() => {
-            let ex = new DeviceException();
-            useCaseStub.throws(ex);
+            deviceServiceGetStub.returns(Promise.resolve(device));
+            deviceServiceUpdateStub.throws(ex);
 
             let req = TestUtils.buildReq();
             let res = TestUtils.buildRes();
@@ -167,7 +218,8 @@ describe("DeviceController", () => {
                 name: "test"
             };
 
-            useCaseStub.returns(Promise.resolve(device));
+            deviceServiceGetStub.returns(Promise.resolve(device));
+            deviceServiceUpdateStub.returns(Promise.resolve(device));
 
             let req = TestUtils.buildReq();
             let res = TestUtils.buildRes();
@@ -179,217 +231,6 @@ describe("DeviceController", () => {
 
             expect(res.status.calledOnceWith(200)).to.be.true;
             expect(res.json.calledOnceWith(device)).to.be.true;
-        });
-    });
-
-    describe("getDeviceData", () => {
-        let getDeviceUseCaseStub;
-        let getDevicesDataUseCaseStub;
-
-        beforeEach(() => {
-            getDeviceUseCaseStub = sinon.stub(GetDevicesUseCase.prototype, "start");
-            getDevicesDataUseCaseStub = sinon.stub(GetDeviceDataUseCase.prototype, "start");
-        });
-
-        afterEach(() => {
-            getDeviceUseCaseStub.restore();
-            getDevicesDataUseCaseStub.restore();
-        });
-
-        it("should fail on error fetching the device", async() => {
-            let ex = new DeviceException();
-            getDeviceUseCaseStub.throws(ex);
-
-            let req = TestUtils.buildReq();
-            let res = TestUtils.buildRes();
-            let nextStub = sinon.spy();
-
-            await DeviceController.getDeviceData(req, res, nextStub);
-
-            expect(nextStub.calledOnceWith(ex)).to.be.true;
-        });
-
-        it("should fail on error fetching data", async() => {
-            let devices = [{
-                _id: "abcdefghilmnopqrstuvz",
-                name: "test"
-            }];
-
-            getDeviceUseCaseStub.returns(devices);
-
-            let ex = new DeviceException();
-            getDevicesDataUseCaseStub.throws(ex);
-
-            let req = TestUtils.buildReq();
-            let res = TestUtils.buildRes();
-            let nextStub = sinon.spy();
-
-            await DeviceController.getDeviceData(req, res, nextStub);
-
-            expect(nextStub.calledOnceWith(ex)).to.be.true;
-        });
-
-        it("should send a list of data on success", async() => {
-            let devices = [{
-                _id: "abcdefghilmnopqrstuvz",
-                name: "test"
-            }];
-
-            let data = [{
-                _id: "abcdefghilmnopqrstuvz",
-                name: "test",
-                value: 22
-            }];
-
-            getDeviceUseCaseStub.returns(Promise.resolve(devices));
-            getDevicesDataUseCaseStub.returns(Promise.resolve(data));
-
-            let req = TestUtils.buildReq();
-            let res = TestUtils.buildRes();
-            let next = () => {};
-
-            res.status.returns(res);
-
-            await DeviceController.getDeviceData(req, res, next);
-
-            expect(res.status.calledOnceWith(200)).to.be.true;
-            expect(res.json.calledOnceWith(data)).to.be.true;
-        });
-
-        it("should send a list of data with specific length on success", async() => {
-            let devices = [{
-                _id: "deviceId",
-                name: "test"
-            }];
-
-            let data = [{
-                _id: "a1",
-                name: "test1",
-                value: 21
-            }, {
-                _id: "b2",
-                name: "test2",
-                value: 22
-            }, {
-                _id: "c3",
-                name: "test3",
-                value: 23
-            }];
-
-            getDeviceUseCaseStub.returns(Promise.resolve(devices));
-            getDevicesDataUseCaseStub.returns(Promise.resolve(data));
-
-            let req = TestUtils.buildReq();
-            req.query.limit = 3;
-            let res = TestUtils.buildRes();
-            let next = () => {};
-
-            res.status.returns(res);
-
-            await DeviceController.getDeviceData(req, res, next);
-
-            expect(res.status.calledOnceWith(200)).to.be.true;
-
-            expect(res.json.calledOnce).to.be.true;
-
-            let jsonCallArgs = res.json.getCall(0).args[0];
-            expect(jsonCallArgs)
-                .to.be.an('array')
-                .to.have.lengthOf(3)
-                .to.include.members(data);
-        });
-    });
-
-    describe("addDeviceData", () => {
-        let getDeviceUseCaseStub;
-        let addDeviceDataUseCaseStub;
-
-        beforeEach(() => {
-            getDeviceUseCaseStub = sinon.stub(GetDevicesUseCase.prototype, "start");
-            addDeviceDataUseCaseStub = sinon.stub(AddDeviceDataUseCase.prototype, "start");
-        });
-
-        afterEach(() => {
-            getDeviceUseCaseStub.restore();
-            addDeviceDataUseCaseStub.restore();
-        });
-
-        it("should fail on error fetching the device", async() => {
-            let ex = new DeviceException();
-            getDeviceUseCaseStub.throws(ex);
-
-            let req = TestUtils.buildReq();
-            let res = TestUtils.buildRes();
-            let nextStub = sinon.spy();
-
-            await DeviceController.addDeviceData(req, res, nextStub);
-
-            expect(nextStub.calledOnceWith(ex)).to.be.true;
-        });
-
-        it("should fail on error inserting new data", async() => {
-            let devices = [{
-                _id: "abcdefghilmnopqrstuvz",
-                name: "test"
-            }];
-
-            getDeviceUseCaseStub.returns(devices);
-
-            let ex = new DeviceDataException();
-            addDeviceDataUseCaseStub.throws(ex);
-
-            let req = TestUtils.buildReq();
-            let res = TestUtils.buildRes();
-            let nextStub = sinon.spy();
-
-            await DeviceController.addDeviceData(req, res, nextStub);
-
-            expect(nextStub.calledOnceWith(ex)).to.be.true;
-        });
-
-        it("should send the inserted DeviceData on success", async() => {
-            let devices = [{
-                _id: "abcdefghilmnopqrstuvz",
-                name: "test"
-            }];
-
-            let data = {
-                _id: "abcdefghilmnopqrstuvz",
-                name: "test",
-                value: "22",
-                unit: "test",
-                device: devices[0]._id
-            };
-
-            getDeviceUseCaseStub.returns(Promise.resolve(devices));
-            addDeviceDataUseCaseStub.returns(Promise.resolve(data));
-
-            let req = TestUtils.buildReq({}, {}, {
-                deviceId: data._id,
-                dataName: data.name
-            }, {
-                value: data.value,
-                unit: data.unit
-            });
-            let res = TestUtils.buildRes();
-            let next = () => {};
-
-            res.status.returns(res);
-
-            await DeviceController.addDeviceData(req, res, next);
-
-            expect(res.status.calledOnceWith(200)).to.be.true;
-            expect(res.json.calledOnce).to.be.true;
-
-            let jsonCallArgs = res.json.getCall(0).args[0];
-            expect(jsonCallArgs)
-                .to.be.an('object')
-                .to.have.any.keys('value', 'name', 'unit', 'name', 'device');
-
-            expect(jsonCallArgs).to.have.property('name', req.params.dataName).that.is.a("string");
-            expect(jsonCallArgs).to.have.property('value', req.body.value).that.is.a("string");
-            expect(jsonCallArgs).to.have.property('unit', req.body.unit).that.is.a("string");
-            expect(jsonCallArgs).to.have.property('device', req.params.deviceId).that.is.a("string");
         });
     });
 });
