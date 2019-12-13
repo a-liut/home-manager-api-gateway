@@ -6,11 +6,11 @@ const DeviceNotFoundException = require("./src/exception/DeviceNotFoundException
 function customErrorHandler(err, req, res, next) {
     switch (err.constructor) {
         case InvalidDataException:
-            return next(createError(400, err.message));
+            return next(createError(400, err.message, err.cause));
         case DeviceNotFoundException:
-            return next(createError(404, err.message));
+            return next(createError(404, err.message, err.cause));
         default:
-            return next(createError(500, err.message));
+            return next(createError(500, err.message, err.cause));
     }
 }
 

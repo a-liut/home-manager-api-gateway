@@ -8,6 +8,7 @@ var db = require('./src/db/db');
 db.init();
 
 var deviceRoute = require('./routes/device');
+var dataRoute = require('./routes/device_data');
 
 var app = express();
 
@@ -18,6 +19,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/devices', deviceRoute);
+app.use('/data', dataRoute);
 
 // --- error handlers
 let handlers = require('./handlers.js');

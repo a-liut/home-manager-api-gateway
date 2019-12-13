@@ -24,21 +24,4 @@ router.get("/:deviceId", DeviceController.getDeviceById);
  */
 router.put("/:deviceId", DeviceController.updateDeviceById);
 
-/**
- * GET: Return all data of a specified device.
- * A limit value can be specified to limit the number of objects returned.
- */
-router.get("/:deviceId/data", DeviceController.getDeviceData);
-
-/**
- * GET: Return all data with a specific name of a speficied device.
- * A limit value can be specified to limit the number of objects returned.
- */
-router.get("/:deviceId/data/:dataName", DeviceController.getDeviceDataByName);
-
-/**
- * POST: Add new data for a given device.
- */
-router.post("/:deviceId/data/:dataName", DeviceController.addDeviceData);
-
 module.exports = router;
