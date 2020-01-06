@@ -3,9 +3,9 @@ var path = require('path');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
-var db = require('./src/db/db');
 
-db.init();
+// DB
+require('./src/db/db').init();
 
 var deviceRoute = require('./routes/device');
 var dataRoute = require('./routes/device_data');

@@ -1,34 +1,37 @@
-var mongoose = require('mongoose');
+const mongoose = require('mongoose');
 
-function connectMongo() {
-    let host = process.env.MONGO_HOST;
-    let port = process.env.MONGO_PORT;
+const CONNECTION_RETRY_DELAY_MS = 3000;
 
-    mongoose.connect(`mongodb://${host}:${port}/home-manager-devices`, {
-        useNewUrlParser: true
-    });
+mongoose.plugin(schema => { schema.options.usePushEach = true });
+mongoose.Promise = require('bluebird');
 
-    mongoose.connection.on("connected", () => {
-        console.log("Connected to db!");
-    });
-
-    mongoose.connection.on("disconnected", () => {
-        console.log("Disconnected from db!");
-    });
-
-    mongoose.connection.on('error', err => {
-        console.error('Connection error:', err);
-
-        process.exit(1);
-    });
-}
+const host = process.env.MONGO_HOST;
+const port = process.env.MONGO_PORT;
 
 function init() {
-    mongoose.plugin(schema => { schema.options.usePushEach = true });
+    return new Promise((resolve, reject) => {
+        let _connect = async() => {
+            try {
+                console.log("Connecting to Mongo...");
+                await mongoose.connect(`mongodb://${host}:${port}/home-manager-devices`, {
+                    useNewUrlParser: true
+                });
 
-    mongoose.Promise = require('bluebird');
+                console.log("Connected to Mongo.");
 
-    connectMongo();
+                resolve();
+            } catch (ex) {
+                console.error('Connection error:', ex.message);
+
+                setTimeout(() => {
+                    _connect();
+                }, CONNECTION_RETRY_DELAY_MS);
+            }
+        }
+
+        _connect();
+    });
+
 }
 
 module.exports.init = init;
