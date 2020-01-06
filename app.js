@@ -33,3 +33,34 @@ if (app.get('env') === 'development') {
 app.use(handlers.prodErrorHandler);
 
 module.exports = app;
+
+// Start AMQP messaging
+let AmqpConsumer = require("./src/amqp/AmqpConsumer");
+
+(async() => {
+    let consumer = await AmqpConsumer.create({
+        host: "amqp",
+        exchangeOptions: {
+            durable: false
+        },
+        queueOptions: {
+            exclusive: true
+        },
+        consumeOptions: {
+            noAck: true
+        }
+    });
+
+    // Close connection in case of SIGINTs
+    process.once('SIGINT', () => {
+        consumer.closeConnection();
+    });
+
+    try {
+        await consumer.consume("device_data", "data.produced", (message) => {
+            console.log("RECEIVED: ", message);
+        });
+    } catch (ex) {
+        console.error("Cannot consume data: ", ex);
+    }
+})();
