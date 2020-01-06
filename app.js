@@ -36,31 +36,27 @@ module.exports = app;
 
 // Start AMQP messaging
 let AmqpConsumer = require("./src/amqp/AmqpConsumer");
-
-(async() => {
-    let consumer = await AmqpConsumer.create({
-        host: "amqp",
-        exchangeOptions: {
-            durable: false
-        },
-        queueOptions: {
-            exclusive: true
-        },
-        consumeOptions: {
-            noAck: true
-        }
-    });
-
+AmqpConsumer.create({
+    host: "amqp",
+    exchangeOptions: {
+        durable: false
+    },
+    queueOptions: {
+        exclusive: true
+    },
+    consumeOptions: {
+        noAck: true
+    }
+}).then((consumer) => {
     // Close connection in case of SIGINTs
     process.once('SIGINT', () => {
         consumer.closeConnection();
     });
 
+    let DeviceDataAmqpController = require("./src/amqp/controller/DeviceDataAmqpController");
     try {
-        await consumer.consume("device_data", "data.produced", (message) => {
-            console.log("RECEIVED: ", message);
-        });
+        DeviceDataAmqpController.bind(consumer);
     } catch (ex) {
-        console.error("Cannot consume data: ", ex);
+        console.error("Cannot bind consumer: ", ex);
     }
-})();
+});
