@@ -81,8 +81,6 @@ async function update(device, data) {
         device.picture_url = data.picture_url;
     }
 
-    console.log("data in service: ", data);
-
     try {
         await device.save();
 

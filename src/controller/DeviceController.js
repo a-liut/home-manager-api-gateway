@@ -60,9 +60,6 @@ async function updateDeviceById(req, res, next) {
         picture_url: req.body.picture_url || null
     }
 
-    console.log("picture_url: " + req.body.picture_url);
-    console.log("picture_url: ", data);
-
     try {
         let device = await DeviceService.get(req.params.deviceId);
         if (!device) {
