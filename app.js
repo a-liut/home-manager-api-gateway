@@ -48,7 +48,7 @@ AmqpConsumer.create({
         noAck: true
     }
 }).then((consumer) => {
-    // Close connection in case of SIGINTs
+    // Close connection in case of SIGINT
     process.once('SIGINT', () => {
         consumer.closeConnection();
     });

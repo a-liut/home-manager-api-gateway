@@ -91,3 +91,7 @@ typings/
 
 # Data folder
 data/
+
+# SSL certificate folder
+
+sslcert/
