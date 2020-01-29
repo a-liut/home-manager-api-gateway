@@ -1,8 +1,5 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
-var ObjectId = Schema.Types.ObjectId;
-
-var DeviceDataSchema = require('./DeviceData');
 
 var DeviceSchema = Schema({
     name: {
@@ -22,6 +19,10 @@ var DeviceSchema = Schema({
     online: {
         type: Boolean,
         default: false
+    },
+    picture_url: {
+        type: String,
+        default: null
     }
 }, {
     timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },

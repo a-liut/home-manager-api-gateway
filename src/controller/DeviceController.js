@@ -37,7 +37,8 @@ async function createDevice(req, res, next) {
     let data = {
         address: ip,
         name: req.body.name || null,
-        heartbeat_url: req.body.heartbeat_url || null
+        heartbeat_url: req.body.heartbeat_url || null,
+        picture_url: req.body.picture_url || null
     };
 
     try {
@@ -55,8 +56,12 @@ async function updateDeviceById(req, res, next) {
     let data = {
         name: req.body.name,
         heartbeat_url: req.body.heartbeat_url,
-        online: req.body.online
+        online: req.body.online,
+        picture_url: req.body.picture_url || null
     }
+
+    console.log("picture_url: " + req.body.picture_url);
+    console.log("picture_url: ", data);
 
     try {
         let device = await DeviceService.get(req.params.deviceId);

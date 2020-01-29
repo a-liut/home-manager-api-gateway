@@ -48,7 +48,8 @@ async function add(data) {
         let d = new Device({
             address: data.address,
             name: data.name,
-            heartbeat_url: data.heartbeat_url
+            heartbeat_url: data.heartbeat_url,
+            picture_url: data.picture_url
         });
 
         await d.save();
@@ -75,6 +76,12 @@ async function update(device, data) {
     if (data.online != null) {
         device.online = !!online;
     }
+
+    if (data.picture_url != null) {
+        device.picture_url = data.picture_url;
+    }
+
+    console.log("data in service: ", data);
 
     try {
         await device.save();
